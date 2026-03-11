@@ -3,161 +3,812 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Export SVG — SVG 내보내기 프로젝트" />
-  <title>Export SVG — PD_DY</title>
+  <title>Graphic AI & SVG Exporter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    /* 메인과 공유할 공통 토큰 */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f;
-      --bg-card: #13131a;
-      --border: rgba(255,255,255,0.07);
-      --text-primary: #f0f0f5;
-      --text-secondary: #8888aa;
-      --text-muted: #55556a;
+      --bg: #050505;
+      --bg-surface: #121212;
+      --bg-surface-hover: #1e1e1e;
+      --border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-muted: #888888;
       --accent: #a78bfa;
-      --accent-2: #60a5fa;
+      --accent-glow: rgba(167, 139, 250, 0.4);
       --font-body: 'Inter', sans-serif;
       --font-display: 'Syne', sans-serif;
     }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: var(--font-body);
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100vh;
+      background-color: var(--bg);
+      color: var(--text-main);
       display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    /* NAV */
-    nav {
-      padding: 20px 48px;
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Layout */
+    .sidebar {
+      width: 380px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    /* Sidebar Components */
+    .brand {
+      padding: 24px;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 12px;
-      backdrop-filter: blur(20px);
-      background: rgba(10,10,15,0.8);
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
-    .nav-back {
-      text-decoration: none;
-      color: var(--text-muted);
+    .brand i { color: var(--accent); }
+
+    .control-panel {
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group label {
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    input[type="text"], input[type="url"], textarea {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Range Slider */
+    .range-wrap {
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: color 0.2s;
+      gap: 16px;
     }
-    .nav-back:hover { color: var(--text-primary); }
-    .nav-sep { color: var(--border); font-size: 16px; }
-    .nav-current {
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      margin-top: -6px;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 4px;
+      cursor: pointer;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    .range-val {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    button.btn-primary {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    button.btn-primary:hover {
+      background: #b89dfa;
+      box-shadow: 0 0 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+    button.btn-secondary {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.btn-secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* Selected Reference Preview */
+    .ref-preview {
+      width: 100%;
+      height: 160px;
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .ref-preview.empty::before {
+      content: '참고 이미지를 선택하세요';
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .ref-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .ref-preview:not(.empty) img {
+      display: block;
+    }
+
+    /* Main Content Sections */
+    .section {
+      padding: 40px;
+      border-bottom: 1px solid var(--border);
+      min-height: auto;
+    }
+
+    .section-header {
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .section-header h2 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .section-header p {
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    /* Search & Grid */
+    .search-bar {
+      position: relative;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+    }
+    .search-bar input {
+      flex: 1;
+      padding-left: 44px;
+      background: var(--bg-surface);
+    }
+    .search-bar i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    /* Pinterest-like Grid */
+    .masonry-grid {
+      column-count: 4;
+      column-gap: 20px;
+    }
+    @media (max-width: 1400px) { .masonry-grid { column-count: 3; } }
+    @media (max-width: 1000px) { .masonry-grid { column-count: 2; } }
+
+    .grid-item {
+      break-inside: avoid;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.3s;
+    }
+    .grid-item:hover {
+      transform: translateY(-4px);
+    }
+    .grid-item img {
+      width: 100%;
+      display: block;
+    }
+    .grid-item .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+    }
+    .grid-item:hover .overlay { opacity: 1; }
+    .select-btn {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+      border: none;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 100px;
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-primary);
+      cursor: pointer;
     }
+    .select-btn:hover { background: var(--accent); color: #000; }
 
-    /* HERO */
-    .hero {
-      padding: 80px 48px 60px;
-      max-width: 960px;
-      margin: 0 auto;
+    /* Results Grid */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 24px;
+    }
+    .result-card {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+    .result-card img {
       width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
     }
-    .project-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(167,139,250,0.1);
-      padding: 4px 12px;
-      border-radius: 100px;
-      margin-bottom: 24px;
+    .result-actions {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
     }
-    h1 {
-      font-family: var(--font-display);
-      font-size: clamp(36px, 5vw, 64px);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    
+    /* SVG Comparison View */
+    .compare-view {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 32px;
+      align-items: stretch;
     }
-    .desc {
-      font-size: 17px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      max-width: 560px;
-    }
-
-    /* CONTENT AREA */
-    .content {
+    .compare-panel {
       flex: 1;
-      padding: 0 48px 80px;
-      max-width: 960px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    .coming-soon {
-      border: 1px dashed var(--border);
+      background: var(--bg-surface);
       border-radius: 16px;
-      padding: 80px 40px;
-      text-align: center;
-      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
     }
-    .coming-soon .icon { font-size: 48px; margin-bottom: 16px; }
-    .coming-soon p { font-size: 15px; font-weight: 500; }
-
-    /* FOOTER */
-    footer {
-      text-align: center;
-      padding: 28px;
-      font-size: 12px;
+    .compare-title {
+      font-size: 14px;
+      font-weight: 600;
       color: var(--text-muted);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+    }
+    .compare-img-box {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 300px;
+      position: relative;
+    }
+    .compare-img-box img, .compare-img-box svg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .svg-controls {
+      margin-top: 24px;
+      padding-top: 24px;
       border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
 
-    @media (max-width: 768px) {
-      nav, .hero, .content { padding-left: 24px; padding-right: 24px; }
+    /* Loader */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
     }
+    .loader i {
+      font-size: 24px;
+      color: var(--accent);
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Sticky Nav */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 16px 40px;
+      background: rgba(18, 18, 18, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 24px;
+    }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      padding: 8px 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-main);
+      border-bottom-color: var(--accent);
+    }
+    
+    /* Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state i {
+      font-size: 48px;
+      opacity: 0.5;
+      margin-bottom: 16px;
+    }
+
   </style>
 </head>
 <body>
 
-  <nav>
-    <a href="../" class="nav-back">← PD_DY</a>
-    <span class="nav-sep">/</span>
-    <span class="nav-current">Export SVG</span>
-  </nav>
-
-  <section class="hero">
-    <div class="project-tag">✦ 프로젝트</div>
-    <h1>Export SVG</h1>
-    <p class="desc">SVG 내보내기 도구 — 디자인 작업물을 SVG 파일로 손쉽게 변환하고 내보내는 인터페이스입니다.</p>
-  </section>
-
-  <main class="content">
-    <div class="coming-soon">
-      <div class="icon">🚧</div>
-      <p>프로젝트 개발 중이에요</p>
+  <!-- SIDEBAR: Controls & Settings -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-bezier-curve"></i>
+      VectorAI
     </div>
-  </main>
+    
+    <div class="control-panel">
+      <!-- Reference Image -->
+      <div class="form-group">
+        <label>Selected Reference</label>
+        <div class="ref-preview empty" id="refPreview">
+          <img src="" alt="Reference" id="refImage" />
+        </div>
+        <input type="url" id="customUrl" placeholder="또는 이미지 URL 직접 입력..." onchange="setCustomReference(this.value)" />
+      </div>
 
-  <footer>© 2026 PD_DY · Export SVG Project</footer>
+      <!-- Prompt -->
+      <div class="form-group">
+        <label>Modification Prompt</label>
+        <textarea id="prompt" placeholder="ex) 빈티지한 느낌으로 변경, 선 두께를 굵게, 주요 컬러를 레드로 변경, 디테일 단순화..."></textarea>
+      </div>
 
+      <!-- Generation Count -->
+      <div class="form-group">
+        <label>Images to Generate</label>
+        <div class="range-wrap">
+          <input type="range" id="genCount" min="1" max="8" value="4" oninput="document.getElementById('genCountVal').innerText = this.value" />
+          <div class="range-val" id="genCountVal">4</div>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="btn-primary" onclick="generateImages()" id="btnGenerate">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Variants
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainScroll">
+    
+    <nav class="top-nav">
+      <a href="#section-search" class="nav-link active">1. Reference Search</a>
+      <a href="#section-results" class="nav-link">2. Generated Results</a>
+      <a href="#section-export" class="nav-link">3. SVG Export</a>
+    </nav>
+
+    <!-- SECTION 1: Pinterest-style Search -->
+    <section class="section" id="section-search">
+      <div class="section-header">
+        <div>
+          <h2>Reference Search</h2>
+          <p>핀터레스트 스타일로 레퍼런스 그래픽을 검색하고 선택하세요.</p>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <i class="fa-solid fa-search"></i>
+        <input type="text" id="searchInput" placeholder="의류 그래픽, 타이포그래피, 일러스트 검색..." onkeypress="handleSearch(event)" />
+        <button class="btn-secondary" onclick="performSearch()">Search</button>
+      </div>
+
+      <div class="masonry-grid" id="referenceGrid">
+        <!-- Images injected via JS -->
+      </div>
+      
+      <div class="loader" id="searchLoader">
+        <i class="fa-solid fa-circle-notch"></i>
+        <p>Loading more graphics...</p>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Generated Results -->
+    <section class="section" id="section-results">
+      <div class="section-header">
+        <div>
+          <h2>Generated Variations</h2>
+          <p>선택한 레퍼런스와 프롬프트를 기반으로 생성된 이미지입니다.</p>
+        </div>
+      </div>
+
+      <div id="resultsContainer">
+        <div class="empty-state">
+          <i class="fa-solid fa-images"></i>
+          <p>아직 생성된 이미지가 없습니다.<br/>레퍼런스를 선택하고 프롬프트를 입력하여 생성해보세요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: SVG Export & Refine -->
+    <section class="section" id="section-export" style="display: none;">
+      <div class="section-header">
+        <div>
+          <h2>SVG Export & Refine</h2>
+          <p>생성된 이미지를 벡터(SVG)로 다듬고 내보냅니다.</p>
+        </div>
+      </div>
+
+      <div class="compare-view">
+        <!-- Original AI Image -->
+        <div class="compare-panel">
+          <div class="compare-title">
+            <span>Generated Image (Raster)</span>
+          </div>
+          <div class="compare-img-box">
+            <img id="exportSourceImg" src="" alt="" />
+          </div>
+        </div>
+
+        <!-- SVG Preview & Controls -->
+        <div class="compare-panel">
+          <div class="compare-title">
+            <span>Vector Preview (SVG)</span>
+            <span style="color: var(--accent)"><i class="fa-solid fa-layer-group"></i> 4 Colors</span>
+          </div>
+          <div class="compare-img-box" id="svgPreviewContainer">
+            <!-- Mock SVG Content -->
+            <svg id="mockSvg" width="100%" height="100%" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="200" fill="#121212"/>
+              <circle cx="100" cy="100" r="50" fill="var(--accent)" stroke="#fff" stroke-width="4" id="mockShape"/>
+            </svg>
+          </div>
+
+          <div class="svg-controls">
+            <!-- Refine tools -->
+            <div class="form-group">
+              <label>Smoothness (노이즈 제거)</label>
+              <input type="range" min="1" max="10" value="5" oninput="updateSvgPreview('smooth', this.value)"/>
+            </div>
+            <div class="form-group">
+              <label>Color Reduction (색상 수)</label>
+              <input type="range" min="2" max="16" value="4" oninput="updateSvgPreview('colors', this.value)"/>
+            </div>
+            <div class="form-group">
+              <label>Line Thickness</label>
+              <input type="range" min="0" max="10" value="2" oninput="updateSvgPreview('stroke', this.value)"/>
+            </div>
+            <div class="form-group">
+              <label>Simplify Path (단순화)</label>
+              <input type="range" min="1" max="10" value="3" oninput="updateSvgPreview('simplify', this.value)"/>
+            </div>
+          </div>
+          
+          <div style="margin-top: 24px; display: flex; gap: 12px;">
+            <button class="btn-primary" style="flex: 1;" onclick="downloadSVG()">
+              <i class="fa-solid fa-download"></i> Download SVG
+            </button>
+            <button class="btn-secondary" style="flex: 1;" onclick="downloadAI()">
+              <i class="fa-solid fa-file-export"></i> Download .AI
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // --- Mock Data & Logic ---
+
+    // 1. Reference Search (Mock Pinterest)
+    // Using random reliable images from Unsplash to act as mock references
+    const mockTopics = [
+      'typography', 'streetwear graphic', 'vintage logo', 'skull illustration',
+      'y2k aesthetic', 'minimalist line art', 'geometric pattern'
+    ];
+    let page = 1;
+
+    function getRandomImageHeight() {
+      // Masonry needs varied heights
+      return Math.floor(Math.random() * (450 - 250 + 1) + 250);
+    }
+
+    function loadReferenceImages(query = 'apparel graphic', clear = false) {
+      const grid = document.getElementById('referenceGrid');
+      const loader = document.getElementById('searchLoader');
+      
+      if (clear) {
+        grid.innerHTML = '';
+        page = 1;
+      }
+      
+      loader.style.display = 'block';
+
+      // Simulate API call
+      setTimeout(() => {
+        for (let i = 0; i < 12; i++) {
+          const height = getRandomImageHeight();
+          // Using picsum seeds to keep images consistent across reloads but varied
+          const seed = query.replace(/\s+/g, '') + page + i;
+          const imgUrl = `https://picsum.photos/seed/${seed}/400/${height}`;
+          
+          const item = document.createElement('div');
+          item.className = 'grid-item';
+          item.innerHTML = `
+            <img src="${imgUrl}" loading="lazy" alt="Reference">
+            <div class="overlay">
+              <button class="select-btn" onclick="selectReference('${imgUrl}')">Make Reference</button>
+            </div>
+          `;
+          grid.appendChild(item);
+        }
+        loader.style.display = 'none';
+        page++;
+      }, 800);
+    }
+
+    function handleSearch(e) {
+      if (e.key === 'Enter') performSearch();
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value || 'graphic';
+      loadReferenceImages(query, true);
+    }
+
+    function selectReference(url) {
+      const preview = document.getElementById('refPreview');
+      const img = document.getElementById('refImage');
+      preview.classList.remove('empty');
+      img.src = url;
+      // Scroll to top
+      document.querySelector('.sidebar').scrollTo(0,0);
+    }
+
+    function setCustomReference(url) {
+      if(url) selectReference(url);
+    }
+
+    // Infinite Scroll Implementation
+    const mainScroll = document.getElementById('mainScroll');
+    mainScroll.addEventListener('scroll', () => {
+      // If we are looking at the search section and near bottom
+      const searchSec = document.getElementById('section-search');
+      const rect = searchSec.getBoundingClientRect();
+      if (rect.bottom < window.innerHeight + 200 && page < 5) {
+        // Prevent multiple simultaneous triggers
+        if (document.getElementById('searchLoader').style.display !== 'block') {
+          loadReferenceImages(document.getElementById('searchInput').value);
+        }
+      }
+      updateActiveNav();
+    });
+
+    // Initial Load
+    loadReferenceImages('streetwear');
+
+    // Navigation highlighting
+    function updateActiveNav() {
+      const sections = document.querySelectorAll('.section');
+      const links = document.querySelectorAll('.nav-link');
+      
+      let current = '';
+      sections.forEach(sec => {
+        const top = sec.offsetTop;
+        if (mainScroll.scrollTop >= top - 100) {
+          current = sec.getAttribute('id');
+        }
+      });
+      
+      links.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').substring(1) === current) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    // 2. Generate Images
+    function generateImages() {
+      const preview = document.getElementById('refPreview');
+      if (preview.classList.contains('empty')) {
+        alert('먼저 레퍼런스 이미지를 선택하거나 URL을 입력해주세요.');
+        return;
+      }
+
+      const prompt = document.getElementById('prompt').value;
+      if (!prompt) {
+        alert('변형을 위한 프롬프트를 입력해주세요.');
+        return;
+      }
+
+      const count = parseInt(document.getElementById('genCount').value);
+      const btn = document.getElementById('btnGenerate');
+      const container = document.getElementById('resultsContainer');
+
+      // Animating button
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+      btn.disabled = true;
+
+      container.innerHTML = `
+        <div style="text-align:center; padding: 60px; color: var(--accent);">
+          <i class="fa-solid fa-wand-magic-sparkles fa-spin fa-3x"></i>
+          <p style="margin-top:20px;">AI가 이미지를 생성하고 있습니다... (${count}장)</p>
+        </div>
+      `;
+
+      // Scroll to results
+      document.getElementById('section-results').scrollIntoView({behavior: 'smooth'});
+
+      // Simulate generation delay
+      setTimeout(() => {
+        let html = '<div class="results-grid">';
+        for (let i = 0; i < count; i++) {
+          // Use different seed for variations
+          const seed = Date.now() + i;
+          const imgUrl = `https://picsum.photos/seed/${seed}/500/500`;
+          
+          html += `
+            <div class="result-card">
+              <img src="${imgUrl}" alt="Generated Variation">
+              <div class="result-actions">
+                <button class="btn-secondary" onclick="exportToSVG('${imgUrl}')" style="width: 100%; border-color: var(--accent); color: var(--accent);">
+                  <i class="fa-solid fa-vector-square"></i> Vectorize (SVG)
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Variants';
+        btn.disabled = false;
+      }, 2000);
+    }
+
+    // 3. Export & SVG Refine
+    function exportToSVG(imgUrl) {
+      document.getElementById('section-export').style.display = 'block';
+      document.getElementById('exportSourceImg').src = imgUrl;
+      
+      // Update mock SVG colors based on image mock
+      document.getElementById('mockShape').setAttribute('fill', 'var(--accent)');
+      
+      setTimeout(() => {
+        document.getElementById('section-export').scrollIntoView({behavior: 'smooth'});
+      }, 100);
+    }
+
+    function updateSvgPreview(type, val) {
+      // Mock interaction for SVG parameter tuning
+      const shape = document.getElementById('mockShape');
+      
+      if (type === 'stroke') {
+        shape.setAttribute('stroke-width', val);
+      } else if (type === 'smooth') {
+        const radius = 50 + parseInt(val)*2;
+        shape.setAttribute('r', radius);
+      } else if (type === 'colors') {
+        // Just mock effect
+        shape.style.opacity = (0.5 + (val/16)*0.5);
+      } else if (type === 'simplify') {
+        const distort = val * 5;
+        shape.setAttribute('cx', 100 + distort);
+      }
+    }
+
+    function downloadSVG() {
+      alert('SVG 파일이 다운로드됩니다. (Mock)');
+      // 실제 구현시에는 SVG 데이터를 Blob으로 만들어 URL.createObjectURL로 다운로드 제공
+    }
+
+    function downloadAI() {
+      alert('.AI 파일 (Adobe Illustrator) 다운로드가 시작됩니다. (Mock)');
+    }
+
+  </script>
 </body>
 </html>
