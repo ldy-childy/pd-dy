@@ -1,33 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="PD_DY - 다양한 UI/UX 프로젝트 모음" />
-  <title>PD_DY — Projects</title>
+  <title>Product Design Team</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">PD_DY</div>
+      <div class="logo">Product Design Team</div>
       <p class="header-sub">프로젝트 쇼케이스</p>
     </div>
   </header>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-inner">
-      <h1 class="hero-title">Made by <span class="accent">DY</span></h1>
-      <p class="hero-desc">디자인과 개발이 만나는 곳, 직접 만든 UI/UX 프로젝트들을 모아놨어요.</p>
-    </div>
-    <div class="hero-bg-blur"></div>
-  </section>
 
   <!-- PROJECT GRID -->
   <main class="main">
@@ -37,6 +32,25 @@
     </div>
 
     <div class="grid" id="project-grid">
+
+      <!-- 프로젝트 카드 템플릿 — 앞으로 여기에 카드 추가 -->
+      <!-- 
+        카드 추가 방법:
+        <article class="card" onclick="location.href='./프로젝트폴더/index.html'">
+          <div class="card-thumb" style="background: linear-gradient(135deg, #색1, #색2);">
+            <span class="card-emoji">🎨</span>
+          </div>
+          <div class="card-body">
+            <span class="card-tag">태그</span>
+            <h3 class="card-title">프로젝트 이름</h3>
+            <p class="card-desc">간단한 설명</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-date">2026.03</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </article>
+      -->
 
       <!-- export_svg 프로젝트 카드 -->
       <article class="card" id="card-export-svg" onclick="location.href='./export_svg/'">
@@ -54,6 +68,12 @@
         </div>
       </article>
 
+      <!-- EMPTY STATE -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">✦</div>
+        <p>첫 번째 프로젝트가 곧 등장해요</p>
+      </div>
+
     </div>
   </main>
 
@@ -67,8 +87,12 @@
     const grid = document.getElementById('project-grid');
     const cards = grid.querySelectorAll('.card');
     const countEl = document.getElementById('project-count');
+    const emptyState = document.getElementById('empty-state');
 
     countEl.textContent = `${cards.length} project${cards.length !== 1 ? 's' : ''}`;
+    if (cards.length > 0) {
+      emptyState.style.display = 'none';
+    }
 
     // 카드 hover 틸트 효과
     document.querySelectorAll('.card').forEach(card => {
@@ -85,4 +109,5 @@
   </script>
 
 </body>
+
 </html>
